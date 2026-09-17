@@ -36,6 +36,8 @@ export default function InscripcionScreen() {
   });
 
   const confirmarInscripcion = (datos) => {
+    debugger;
+    console.log("llego aca");
     setDatosConfirmados(datos);
   };
 
@@ -235,7 +237,7 @@ export default function InscripcionScreen() {
             styles.boton,
             !isValid && styles.botonDeshabilitado,
           ]}
-          onPress={handleSubmit(confirmarInscripcion)}
+          onPress={confirmarInscripcion}
           disabled={!isValid}
         >
           <Text style={styles.textoBoton}>

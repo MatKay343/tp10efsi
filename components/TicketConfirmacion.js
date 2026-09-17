@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function TicketConfirmacion({
   datos,
-  volverAInscribir,
 }) {
   return (
     <View style={styles.container}>
@@ -47,7 +46,7 @@ export default function TicketConfirmacion({
         </Text>
 
         <Text style={styles.valor}>
-          {datos.tipoEntrada.toUpperCase()}
+          {datos.tipoEntrada}
         </Text>
 
         {datos.telefono !== '' && (
@@ -64,7 +63,6 @@ export default function TicketConfirmacion({
 
         <TouchableOpacity
           style={styles.boton}
-          onPress={volverAInscribir}
         >
           <Text style={styles.textoBoton}>
             Volver a inscribir a otra persona

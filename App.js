@@ -7,8 +7,10 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import TicketConfirmacion from './components/TicketConfirmacion';
 
 export default function App() {
+  const [mostrarTicket, setMostrarTicket] = useState(false);
   const [formulario, setFormulario] = useState({
     nombre: '',
     email: '',
@@ -24,60 +26,73 @@ export default function App() {
   };
 
   const enviarFormulario = () => {
-    console.log(formulario);
+    if (formulario) {
+        setMostrarTicket(true);
+      }
   };
 
-  return (
+  if (mostrarTicket) {
+    return (
     <View style={styles.container}>
-      <StatusBar style="light" />
-
-      <Text style={styles.titulo}>SonidoSur</Text>
-
-      <Text style={styles.subtitulo}>
-        Contactanos
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Nombre"
-        value={formulario.nombre}
-        onChangeText={(texto) => actualizarCampo('nombre', texto)}
+      <TicketConfirmacion
+        datos={formulario}
       />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        value={formulario.email}
-        onChangeText={(texto) => actualizarCampo('email', texto)}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Teléfono"
-        keyboardType="phone-pad"
-        value={formulario.telefono}
-        onChangeText={(texto) => actualizarCampo('telefono', texto)}
-      />
-
-      <TextInput
-        style={[styles.input, styles.mensaje]}
-        placeholder="Mensaje"
-        multiline
-        value={formulario.mensaje}
-        onChangeText={(texto) => actualizarCampo('mensaje', texto)}
-      />
-
-      <TouchableOpacity
-        style={styles.boton}
-        onPress={enviarFormulario}
-      >
-        <Text style={styles.textoBoton}>
-          Enviar
-        </Text>
-      </TouchableOpacity>
     </View>
-  );
+    );
+  } else {
+     return (
+      <View style={styles.container}>
+        <StatusBar style="light" />
+
+        <Text style={styles.titulo}>SonidoSur</Text>
+
+        <Text style={styles.subtitulo}>
+          Contactanos
+        </Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre"
+          value={formulario.nombre}
+          onChangeText={(texto) => actualizarCampo('nombre', texto)}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          keyboardType="email-address"
+          value={formulario.email}
+          onChangeText={(texto) => actualizarCampo('email', texto)}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Teléfono"
+          keyboardType="phone-pad"
+          value={formulario.telefono}
+          onChangeText={(texto) => actualizarCampo('telefono', texto)}
+        />
+
+        <TextInput
+          style={[styles.input, styles.mensaje]}
+          placeholder="Mensaje"
+          multiline
+          value={formulario.mensaje}
+          onChangeText={(texto) => actualizarCampo('mensaje', texto)}
+        />
+
+        <TouchableOpacity
+          style={styles.boton}
+          onPress={enviarFormulario}
+        >
+          <Text style={styles.textoBoton}>
+            Enviar
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+ 
 }
 
 const styles = StyleSheet.create({
