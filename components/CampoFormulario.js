@@ -7,6 +7,7 @@ export default function CampoFormulario({
   onChangeText,
   error,
   keyboardType = 'default',
+  autoCapitalize = 'sentences',
 }) {
   return (
     <View style={styles.container}>
@@ -18,6 +19,7 @@ export default function CampoFormulario({
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
       />
 
       {error && (
@@ -47,15 +49,16 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#cccccc',
+    borderColor: '#d7d7d7',
+    color: '#111111',
   },
 
   inputError: {
-    borderColor: '#ff4d4d',
+    borderColor: '#ff6b6b',
   },
 
   error: {
-    color: '#ff4d4d',
+    color: '#ff6b6b',
     marginTop: 5,
     fontSize: 14,
   },

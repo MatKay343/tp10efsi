@@ -1,31 +1,33 @@
-import React, { useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-
-import { useForm, Controller } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import CampoFormulario from '../components/CampoFormulario';
 import TicketConfirmacion from '../components/TicketConfirmacion';
 
 export default function InscripcionScreen() {
   const [datosConfirmados, setDatosConfirmados] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     mode: 'onChange',
-
+    reValidateMode: 'onChange',
     defaultValues: {
       nombreCompleto: '',
       email: '',
@@ -35,14 +37,47 @@ export default function InscripcionScreen() {
     },
   });
 
-  const confirmarInscripcion = (datos) => {
-    debugger;
-    console.log("llego aca");
-    setDatosConfirmados(datos);
+  useEffect(() => {
+    const cargarUltimoEmail = async () => {
+      try {
+        const emailGuardado = await AsyncStorage.getItem('@sonidoSur:ultimoEmail');
+        if (emailGuardado) {
+          setValue('email', emailGuardado, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }
+      } catch (error) {
+        console.log('Error al cargar último email:', error);
+      }
+    };
+
+    cargarUltimoEmail();
+  }, [setValue]);
+
+  const confirmarInscripcion = async (datos) => {
+    setIsSubmitting(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    try {
+      await AsyncStorage.setItem('@sonidoSur:ultimoEmail', datos.email.trim());
+    } catch (error) {
+      console.log('Error al guardar último email:', error);
+    }
+
+    setDatosConfirmados({ ...datos, email: datos.email.trim() });
+    setIsSubmitting(false);
   };
 
   const volverAInscribir = () => {
-    reset();
+    reset({
+      nombreCompleto: '',
+      email: '',
+      edad: '',
+      tipoEntrada: '',
+      telefono: '',
+    });
     setDatosConfirmados(null);
   };
 
@@ -57,6 +92,8 @@ export default function InscripcionScreen() {
     );
   }
 
+  const botonDeshabilitado = !isValid || isSubmitting;
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -66,26 +103,16 @@ export default function InscripcionScreen() {
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.titulo}>
-          SONIDO SUR
-        </Text>
-
-        <Text style={styles.subtitulo}>
-          Formulario de inscripción
-        </Text>
+        <Text style={styles.titulo}>SONIDO SUR</Text>
+        <Text style={styles.subtitulo}>Formulario de inscripción</Text>
 
         <Controller
           control={control}
           name="nombreCompleto"
           rules={{
             required: 'Ingresá tu nombre completo',
-            minLength: {
-              value: 3,
-              message: 'Ingresá tu nombre completo',
-            },
             validate: (value) =>
-              value.trim().length >= 3 ||
-              'Ingresá tu nombre completo',
+              (value && value.trim().length >= 3) || 'Ingresá tu nombre completo',
           }}
           render={({ field: { onChange, value } }) => (
             <CampoFormulario
@@ -103,10 +130,9 @@ export default function InscripcionScreen() {
           name="email"
           rules={{
             required: 'Ingresá un email válido',
-            pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: 'Ingresá un email válido',
-            },
+            validate: (value) =>
+              /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || '') ||
+              'Ingresá un email válido',
           }}
           render={({ field: { onChange, value } }) => (
             <CampoFormulario
@@ -115,6 +141,7 @@ export default function InscripcionScreen() {
               value={value}
               onChangeText={onChange}
               keyboardType="email-address"
+              autoCapitalize="none"
               error={errors.email?.message}
             />
           )}
@@ -126,9 +153,13 @@ export default function InscripcionScreen() {
           rules={{
             required: 'La edad tiene que ser mayor a 12',
             validate: (value) => {
+              if (value === '' || value === undefined) {
+                return 'La edad tiene que ser mayor a 12';
+              }
+
               const edad = Number(value);
 
-              if (edad < 12 || edad > 99) {
+              if (!Number.isInteger(edad) || edad <= 12 || edad > 99) {
                 return 'La edad tiene que ser mayor a 12';
               }
 
@@ -147,16 +178,12 @@ export default function InscripcionScreen() {
           )}
         />
 
-        <Text style={styles.label}>
-          Tipo de entrada
-        </Text>
+        <Text style={styles.label}>Tipo de entrada</Text>
 
         <Controller
           control={control}
           name="tipoEntrada"
-          rules={{
-            required: 'Elegí un tipo de entrada',
-          }}
+          rules={{ required: 'Elegí un tipo de entrada' }}
           render={({ field: { onChange, value } }) => (
             <View>
               <View style={styles.opciones}>
@@ -196,9 +223,7 @@ export default function InscripcionScreen() {
               </View>
 
               {errors.tipoEntrada && (
-                <Text style={styles.error}>
-                  {errors.tipoEntrada.message}
-                </Text>
+                <Text style={styles.error}>{errors.tipoEntrada.message}</Text>
               )}
             </View>
           )}
@@ -211,13 +236,11 @@ export default function InscripcionScreen() {
           name="telefono"
           rules={{
             validate: (value) => {
-              if (value === '') {
+              if (!value || value.trim() === '') {
                 return true;
               }
 
-              return /^[0-9]+$/.test(value)
-                ? true
-                : 'Solo se permiten números';
+              return /^[0-9]+$/.test(value.trim()) || 'Solo se permiten números';
             },
           }}
           render={({ field: { onChange, value } }) => (
@@ -233,16 +256,18 @@ export default function InscripcionScreen() {
         />
 
         <TouchableOpacity
-          style={[
-            styles.boton,
-            !isValid && styles.botonDeshabilitado,
-          ]}
-          onPress={confirmarInscripcion}
-          disabled={!isValid}
+          style={[styles.boton, botonDeshabilitado && styles.botonDeshabilitado]}
+          onPress={handleSubmit(confirmarInscripcion)}
+          disabled={botonDeshabilitado}
         >
-          <Text style={styles.textoBoton}>
-            Confirmar inscripción
-          </Text>
+          {isSubmitting ? (
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="small" color="#101010" />
+              <Text style={styles.textoBoton}>Procesando...</Text>
+            </View>
+          ) : (
+            <Text style={styles.textoBoton}>Confirmar inscripción</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -297,7 +322,7 @@ const styles = StyleSheet.create({
   },
 
   opcionSeleccionada: {
-    backgroundColor: '#555555',
+    backgroundColor: '#6d5dfc',
   },
 
   textoOpcion: {
@@ -310,25 +335,32 @@ const styles = StyleSheet.create({
   },
 
   error: {
-    color: '#ff4d4d',
-    marginTop: 5,
+    color: '#ff6b6b',
+    marginTop: 6,
     fontSize: 14,
   },
 
   espacio: {
-    height: 5,
+    height: 10,
   },
 
   boton: {
     backgroundColor: '#ffffff',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 18,
   },
 
   botonDeshabilitado: {
-    opacity: 0.4,
+    opacity: 0.45,
+  },
+
+  loadingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 
   textoBoton: {
